@@ -1,0 +1,117 @@
+THINGS TO BE IN THE OFF-CHAIN DATABASE EVENTUALLY
+1. User info (only username and user score will be saved on-chain against user address)
+2. Counter challenge
+3. Unresolved Challenge (only resolved/completed challenge will be saved on-chain)
+4. The leaderboard info
+
+
+REGISTRATION & USERNAME
+User connects wallet, a check is made to know if they're registered or not;
+    1. if they are registered already, they are taken to their dashboard
+    2. if they are not registered, a random username is generated for them 
+        and they are registered and after registration, they are taken to their dashboard.
+
+Once user connects wallet, they can go ahead to play the game as they would have registered under the hood.
+
+When on their dashboard, they can decide to update their username and they can only update their username once.
+You can only update username once after registration on the frontend, if you dont supply a username, 
+we will generate a random one for you at registration.
+NB: We will eventually save user info on the off-chain database, what we'll save on-chain will be user_address against username
+    username will be used as key to saving user info in the database
+
+SINGLE GAME
+For every time a user plays, his score is accumulated
+and this will be used to judge the global leaderboard;
+the more a user plays, the more the scores the player accumulate,
+the higher their position on the global leaderboard.
+(this will keep players on the platform) - we might have incentives for the
+leaders on the leaderboard. this will incentivise the player and keep them
+to maintain their spot on the leaderboard.
+NB: For single player, as long as the player is still playing, we will keep accumulating
+    his score but we won't update it on-chain but as soon as the player exits the game,
+    his accumulated score is updated on-chain. this is to prevent wastage of transaction fee
+    because we are the one paying for the transaction fee not the player
+
+
+
+CHALLENGE
+any player on the global ranking can challenge another player on the leaderboard,
+and when the challenge is accepted, both of them will play, depending on the number
+games they accept to play. they stake and play and at the end of the game,
+winner takes it all and an agreed number of points will be deducted from the loser
+and added to the winner points, increasing the winner ranking on the leaderboard.
+DETAILS:
+There will be challenge object that consist of
+Challenge {
+    challenge_id,
+    challenger ,
+    challenged,
+    stake_amount,
+    number_of_games,
+    points_to_deduct,
+    completed,
+    created_at,
+    challenge status (ACCEPTED, REJECTED, COUNTERED(counter_id)),
+}
+
+Counter_Challenge {
+    counter_id,
+    challenge_id,
+    stake_amount,
+    number_of_games,
+    points_to_deduct,
+    status,
+}
+
+
+FLOW:
+Player challenge another player. 
+- if the challenged accepts the challenge with the conditions, 
+    then the challenes goes on and the challenge can be completed after that.
+- if the challenged does not accept the challenge conditions, 
+    he can counter challenge with his own conditions and if the challenger is ok with
+    the counter challenge conditions, he can accept or reject. With that, the challenge
+    is not complete, the challenger can update the original challenge and resend it
+    to the challenged and the process can continue until the final acceptance or the
+    challenge is closed by the challenger.
+NB: This whole process might be saved on a backend database and only accepted challenes
+will be saved on-chain to avoid saving unnecessary information on-chain.
+- if the challenger rejects the challenge, the challenge stays open and the challenger 
+    can update the challenge and send it back to the challenged. if not, the challenger
+    can close the challenge.
+NB: I am still not sure if i want to save rejected but closed challenge on chain. 
+    i will figure that out later
+when the players finish playing and there's a tie, the frontend/backend will pick that and 
+give the players chance to play for a certain number of time (say 2 times) to pick a winner.
+a winner must just emerge.
+for the mode of the game later: players will be given the chance to either pick...
+    1. only stake
+    2. point deduction
+    3. stake and point deduction
+    
+
+
+MULTI-PLAYER AND STAKING
+2 or more players can decide to play together. they stake and play
+the game. the game creator sets the sharing percentage format between all players.
+for instance, if they are 5, he could set it to be 50%, 30%, 20% (top 3)
+but the platform fee is constant (5% of the total stake).
+the total score accumulated in a game like this will also be added to each players score on the leaderboard
+DETAILS: 
+Game creator will create the game and send the link to others to join the game,
+each player joins by staking their token and when the time stipulated by the creator reaches,
+no player is allowed to join and again, when the time stipulated for the game to start
+reaches, each player is able to play the game and when each player finish playing the game,
+the score is calculated and at the end of the last player playing the game, the final
+leaderboard is revealed, showing the winner and their winnings.
+
+
+LEADERBOARD
+the leaderboard array will be sent to the frontend to display the leaderboard
+on the frontend, there will be a function to loop the array and display the leaderboard
+there will be a function on the smart contact to update the leaderboard
+when the function updates the leaderboard, it will emit an event
+this event will be caught on the frontend and when it's caught, the frontend will fetch the leaderboard array from the smart contract
+when it's fetched, the function on the frontend will loop the array and display the leaderboard
+this will be a continous process on the frontend
+the leaderboard will be updated every time a player score is updated on the smart contract
