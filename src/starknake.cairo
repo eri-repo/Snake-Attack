@@ -101,15 +101,15 @@ pub mod Starknake {
         //and the accumulated score is updated on-chain
         //we are making this call on behalf of the player so we are paying the gas fee
         fn update_player_score(
-            ref self: ContractState, address: ContractAddress, current_score: u256,
+            ref self: ContractState, player_address: ContractAddress, current_score: u256,
         ) {
-            assert(self.users.entry(address).read().username != 0, NOT_PLAYER);
+            assert(self.users.entry(player_address).read().username != 0, NOT_PLAYER);
 
-            let mut player = self.users.entry(address).read();
+            let mut player = self.users.entry(player_address).read();
 
             player.highest_score = player.highest_score + current_score;
 
-            self.users.entry(address).write(player);
+            self.users.entry(player_address).write(player);
 
             self.emit(ScoreUpdated { score: current_score });
         }
