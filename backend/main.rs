@@ -1,60 +1,128 @@
-use crate::functions::{check_user, create_user, delete_user, get_user, update_user};
+use crate::handlers::check_user::check_user;
+use crate::handlers::create_user::create_user;
+use crate::handlers::delete_user::delete_user;
+use crate::handlers::get_user::get_user;
+use crate::handlers::leaderboard::leaderboard;
+use crate::handlers::update_score::update_score;
+use crate::handlers::update_user::update_user;
+use crate::logging::setup_logging;
+use crate::model::AppState;
 use crate::swagger_config::ApiDoc;
-use axum::routing::put;
-use axum::{routing::{get, post}, Router};
+use axum::http::HeaderValue;
+use axum::routing::{delete, put};
+use axum::{
+    routing::{get, post},
+    Router,
+};
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager};
 use dotenvy::dotenv;
 use std::env;
 use std::net::SocketAddr;
+use std::sync::Arc;
 use tokio::net::TcpListener;
+use tokio::signal;
 use tower_http::cors::{Any, CorsLayer};
+use tracing::log::info;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
-mod schema;
+mod error;
+mod handlers;
+mod logging;
 mod model;
+mod schema;
 mod swagger_config;
-mod functions;
+
 mod generate_username;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), eyre::Error> {
     dotenv().ok();
+    // initialize tracing with environment-based log level (default: DEBUG)
+    setup_logging();
+
+    info!("Starting Snake Attack application");
+
+
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
-    let manager = ConnectionManager::<PgConnection>::new(database_url);
+    let cors_origins = env::var("CORS_ORIGINS")
+        .unwrap_or_else(|_| "http://localhost:5173".to_string())
+        .split(',')
+        .map(|s| s.trim().to_string())
+        .collect::<Vec<String>>();
+
+    info!("cors origins: {:?}", cors_origins);
+
     let pool = r2d2::Pool::builder()
-        .build(manager)
+        .build(ConnectionManager::<PgConnection>::new(database_url))
         .expect("Failed to create pool.");
+
+    let state = Arc::new(AppState { db: pool });
+
+    // Setup CORS
+    let cors = CorsLayer::new()
+        .allow_methods(Any)
+        .allow_headers(Any)
+        .allow_origin(
+            cors_origins
+                .iter()
+                .map(|s| s.parse::<HeaderValue>())
+                .collect::<Result<Vec<_>, _>>()?,
+        );
 
     let app = Router::new()
         .route("/create_user", post(create_user))
         .route("/update_user", put(update_user))
-        .route("/delete_user", put(delete_user))
+        .route("/delete_user", delete(delete_user))
+        .route("/update_score", put(update_score))
         .route("/users/{wallet_address}", get(get_user))
+        .route("/leaderboard", get(leaderboard))
         .route("/check_user", post(check_user))
         .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
-        .with_state(pool)
-        .layer(CorsLayer::new()
-            .allow_origin(Any)
-            .allow_methods(Any)
-            .allow_headers(Any));
+        .layer(cors)
+        .with_state(state);
 
-    eprintln!("Server running on http://0.0.0.0:8080");
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
-    let listener = TcpListener::bind(addr).await.unwrap();
-    axum::serve(listener, app).await.unwrap();
+    let listener = TcpListener::bind(addr).await?;
+
+    info!("Server running on http://{}", addr);
+    info!(
+        "Swagger UI available at http://{}/swagger-ui/index.html#/",
+        addr
+    );
+
+    // serve graceful shutdown
+    axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal())
+        .await?;
+
+    info!("Server shut down gracefully");
+    Ok(())
 }
 
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        signal::ctrl_c()
+            .await
+            .expect("Failed to install Ctrl+C handler");
+    };
 
-// cargo run --package rust_starknake --bin starknake 
+    #[cfg(unix)]
+    let terminate = async {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("Failed to install SIGTERM handler")
+            .recv()
+            .await;
+    };
 
-// curl -X POST http://127.0.0.1:8080/create_user \                                                                                                ✔  system 
-// -H "Content-Type: application/json" \
-// -d '{"wallet_address": "0x354624546fdfgnk35432"}'
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
 
-// curl -X GET http://127.0.0.1:8080/users/0x354624546fdfgnk35432
-
-// psql -U postgres -d rustie -c "\d users"
+    tokio::select! {
+        _ = ctrl_c => info!("Received Ctrl+C, shutting down"),
+        _ = terminate => info!("Received SIGTERM, shutting down"),
+    }
+}

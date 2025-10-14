@@ -1,6 +1,6 @@
 mod errors;
 mod interfaces;
-mod structs;
+mod game_objects;
 mod starknake;
 mod utilities;
 mod events;

@@ -71,4 +71,5 @@ COPY --from=builder /usr/local/cargo/bin/diesel /usr/local/bin/diesel
 EXPOSE 8080
 
 # Entrypoint: wait for DB, run migrations, then exec the web binary
-ENTRYPOINT ["/app/wait-for-db.sh", "db", "5432", "", "./starknake"]
+# Pass empty HOST and PORT so the script will parse them from the DATABASE_URL env on platforms like Render
+ENTRYPOINT ["/app/wait-for-db.sh", "", "", "", "./starknake"]

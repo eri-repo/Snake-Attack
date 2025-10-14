@@ -6,21 +6,23 @@ services:
     ports:
       - "8081:8080"
     environment:
-      POSTGRES_DB: rusty
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgrespw
-      DATABASE_URL: postgres://postgres:postgrespw@db:5432/rusty
+      POSTGRES_DB: snake_db_1phc
+      POSTGRES_USER: snake_db_1phc_user
+      POSTGRES_PASSWORD: HD8WwSBbZo60HkzGjk64RqF0WCNkMg5I
+      # For local compose use the local `db` service. If you want to test against Render DB, replace this with the Render DATABASE_URL.
+      DATABASE_URL: postgresql://snake_db_1phc_user:HD8WwSBbZo60HkzGjk64RqF0WCNkMg5I@db:5432/snake_db_1phc
     depends_on:
       - db
 
   db:
     image: postgres:16
+    # Bind to a non-conflicting host port in case local Postgres is running on 5432
     ports:
       - "5433:5432"
     environment:
-      POSTGRES_DB: rusty
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgrespw
+      POSTGRES_DB: snake_db_1phc
+      POSTGRES_USER: snake_db_1phc_user
+      POSTGRES_PASSWORD: HD8WwSBbZo60HkzGjk64RqF0WCNkMg5I
     volumes:
       - db-data:/var/lib/postgresql/data
 
