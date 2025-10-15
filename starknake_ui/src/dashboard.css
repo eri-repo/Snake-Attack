@@ -1,0 +1,233 @@
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(124, 255, 124, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(124, 255, 124, 0.4);
+  }
+}
+
+.dashboard-root {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background-image: url('/sprites/bg_game.jpg');
+  background-size: cover;
+  background-position: center;
+}
+
+.dashboard-root::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(46, 213, 115, 0.1) 0%, rgba(0, 0, 0, 0.3) 100%);
+  pointer-events: none;
+}
+
+.dashboard-container {
+  position: relative;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(12px);
+  padding: 32px;
+  border-radius: 24px;
+  color: #fff;
+  width: 600px;
+  max-width: 90%;
+  border: 2px solid rgba(124, 255, 124, 0.2);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(124, 255, 124, 0.1);
+  animation: slideIn 0.5s ease-out;
+}
+
+.dashboard-title {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, #7cff7c 0%, #2bd12b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+}
+
+.dashboard-info {
+  margin-bottom: 24px;
+}
+
+.info-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(124, 255, 124, 0.2);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  transition: all 0.3s ease;
+}
+
+.info-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(124, 255, 124, 0.3);
+  transform: translateX(4px);
+}
+
+.info-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(124, 255, 124, 0.8);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.info-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  word-break: break-all;
+}
+
+.username-edit-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.edit-input {
+  flex: 1;
+  padding: 10px 14px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 2px solid rgba(124, 255, 124, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  transition: all 0.3s ease;
+}
+
+.edit-input:focus {
+  outline: none;
+  border-color: rgba(124, 255, 124, 0.6);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.edit-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.btn {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #7cff7c 0%, #2bd12b 100%);
+  color: #003300;
+  box-shadow: 0 4px 12px rgba(43, 209, 43, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(43, 209, 43, 0.5);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.btn-small {
+  padding: 6px 14px;
+  font-size: 12px;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dashboard-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  justify-content: center;
+}
+
+.error-text {
+  color: #ff6b6b;
+  font-size: 13px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba(255, 107, 107, 0.1);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  animation: slideIn 0.3s ease-out;
+}
+
+.edit-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.score-highlight {
+  font-size: 24px;
+  font-weight: 700;
+  color: #7cff7c;
+  text-shadow: 0 0 10px rgba(124, 255, 124, 0.5);
+}
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 24px;
+  }
+
+  .dashboard-title {
+    font-size: 28px;
+  }
+
+  .username-edit-container {
+    flex-direction: column;
+  }
+
+  .edit-input {
+    width: 100%;
+  }
+
+  .dashboard-actions {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}
